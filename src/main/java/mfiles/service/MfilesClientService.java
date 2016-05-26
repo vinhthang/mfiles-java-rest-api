@@ -38,11 +38,13 @@ public class MfilesClientService {
         this.mFilesServerRESTURI = serverURI;
     }
 
-    public List<Vault> authentication(String username, String password) {
+    public List<Vault> authentication(String username, String password, boolean windowsUser, String domain) {
         String result = null;
         HttpPost request = new HttpPost(mFilesServerRESTURI + "session.aspx?_method=PUT");
         request.setHeader("Accept", "application/json");
         Authentication auth = new Authentication(username, password);
+        auth.setWindowsUser(windowsUser);
+        auth.setDomain(domain);
         final HttpEntity entity = new StringEntity(gson.toJson(auth), "UTF-8");
         request.setEntity(entity);
         final String execute = execute(request);
@@ -71,17 +73,23 @@ public class MfilesClientService {
         return gson.fromJson(execute, ObjectVersion.class);
     }
 
-    public ObjectVersion createObject(String xAuthentication, int type, PropertyValue[] propertyValues, Path file) {
+    public ObjectVersion createObject(String xAuthentication, int type, PropertyValue[] propertyValues, Path file, int workflow) {
         UploadInfo uploadInfo = uploadFile(xAuthentication, file);
-        uploadInfo.setTitle("test");
-        uploadInfo.setExtension("txt");
+        final String fileName = file.getFileName().toString();
+//        uploadInfo.setTitle("test");
+        String extension = "txt";
+        if (fileName.lastIndexOf(".") > 0) {
+            extension = fileName.substring(fileName.lastIndexOf(".") + 1);
+        }
+        uploadInfo.setExtension(extension);
         HttpPost request = new HttpPost(mFilesServerRESTURI + "objects/" + type + ".aspx?checkIn=false&_method=POST");
         request.setHeader("X-Authentication", xAuthentication);
 
         ObjectCreationInfo objectCreationInfo = new ObjectCreationInfo();
         objectCreationInfo.setPropertyValues(propertyValues);
         objectCreationInfo.setFiles(new UploadInfo[] {uploadInfo});
-        objectCreationInfo.setWorkflow(107);
+//        objectCreationInfo.setWorkflow(107);
+        objectCreationInfo.setWorkflow(workflow);
         objectCreationInfo.setNamedACL(-1);
         request.setEntity(new StringEntity(gson.toJson(objectCreationInfo), "UTF-8"));
 
@@ -100,6 +108,14 @@ public class MfilesClientService {
         return gson.fromJson(execute, UploadInfo.class);
     }
 
+    public List<ClassGroup> getClassGroups(String xAuthentication) {
+        HttpGet request = new HttpGet(mFilesServerRESTURI + "objects/0/classes.aspx?byGroup=true");
+        request.setHeader("Accept", "application/json");
+        request.setHeader("X-Authentication", xAuthentication);
+        final String execute = execute(request);
+
+        return gson.fromJson(execute, new TypeToken<List<ClassGroup>>(){}.getType());
+    }
 
     public List<PropertyDef> getPropertyDefs(String xAuthentication) {
         HttpGet request = new HttpGet(mFilesServerRESTURI + "structure/properties");
@@ -126,7 +142,7 @@ public class MfilesClientService {
             return responseString;
         } catch (IOException e) {
             e.printStackTrace();
-            return null;
+            throw new MFilesException(500, e.getMessage());
         }
     }
 
@@ -136,18 +152,21 @@ public class MfilesClientService {
         return parser.parse(result).getAsJsonArray();
     }
 
-    public ExportResult export(String username, String password, Path exportPath, String customerNo, String issueType, String selectedClass) {
+    public ExportResult export(Path exportPath, String customerNo, String issueType, String[] selectedClassAndWorkFlow) {
         final ExportResult exportResult = new ExportResult();
-        List<Vault> authJson = this.authentication(username, password);
+        List<Vault> authJson = this.authentication("jirauser", "vnds1234", false, null);
         String xAuthentication = authJson.get(0).getAuthentication();
         //Class value
-        PropertyValue testJiraClass = PropertyValue.create(100, MFDataType.Lookup, null, 451);
+//        PropertyValue testJiraClass = PropertyValue.create(100, MFDataType.Lookup, null, 451);
+        PropertyValue testJiraClass = PropertyValue.create(100, MFDataType.Lookup, null, Integer.valueOf(selectedClassAndWorkFlow[0]));
 
+//        PropertyValue soTaiKhoan = PropertyValue.create(1205, MFDataType.Lookup, customerNo, 32901);
         PropertyValue soTaiKhoan = PropertyValue.create(1205, MFDataType.Lookup, customerNo, 32901);
+        PropertyValue noiLuuTru = PropertyValue.create(1256, MFDataType.MultiSelectLookup, "Hội Sở", 1);
 
         ObjectVersion objectVersion = this.createObject(xAuthentication, MFDataType.Uninitialized,
-                new PropertyValue[] {testJiraClass, soTaiKhoan}, exportPath);
-        exportResult.setTitle(objectVersion.getTitle());
+                new PropertyValue[] {testJiraClass, soTaiKhoan, noiLuuTru}, exportPath, Integer.valueOf(selectedClassAndWorkFlow[1]));
+        exportResult.setMessage(gson.toJson(objectVersion));
         return exportResult;
     }
 }

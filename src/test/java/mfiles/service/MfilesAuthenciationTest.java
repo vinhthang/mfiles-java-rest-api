@@ -16,10 +16,21 @@ public class MfilesAuthenciationTest {
     MfilesClientService clientService = new MfilesClientService("http://10.26.0.46/REST/");
     @Test
     public void testAuth() {
-        List<Vault> test = clientService.authentication("thang.hoang", "VNDs$1234");
+        List<Vault> test = clientService.authentication("jirauser", "vnds1234", false, null);
 //        List<Vault> test = authentication.authentication("AlexK", "alexk", "﻿D673ADED-6180-494D-BE9D-FC190A4AA1D8");
         assertThat(test).isNotNull();
         assertThat(test.get(0).getAuthentication()).isNotNull();
+    }
+    @Test
+    public void testGetClasses() {
+        List<Vault> test = clientService.authentication("thang.hoang", "VNDs$1234", true, "IPA");
+//        List<Vault> test = authentication.authentication("AlexK", "alexk", "﻿D673ADED-6180-494D-BE9D-FC190A4AA1D8");
+        assertThat(test).isNotNull();
+        assertThat(test.get(0).getAuthentication()).isNotNull();
+
+        final List<ClassGroup> classGroups = clientService.getClassGroups(test.get(0).getAuthentication());
+
+        assertThat(classGroups).isNotNull();
     }
 
     @Test
@@ -27,23 +38,23 @@ public class MfilesAuthenciationTest {
         //Class value
         PropertyValue testJiraClass = PropertyValue.create(100, MFDataType.Lookup, null, 451);
 
-        PropertyValue soTaiKhoan = PropertyValue.create(1205, MFDataType.Lookup, "0001000003", 32901);
+        PropertyValue soTaiKhoan = PropertyValue.create(1205, MFDataType.Lookup, "0001000001", 32901);
 
-        List<Vault> authJson = clientService.authentication("thang.hoang", "VNDs$1234");
+        List<Vault> authJson = clientService.authentication("thang.hoang", "VNDs$1234", true, "IPA");
         String xAuthentication = authJson.get(0).getAuthentication();
 
         List<PropertyDef> propertyDefList = clientService.getPropertyDefs(xAuthentication);
 
         Path file = Paths.get("/Users/thang/Documents", "thang.hoang");
         ObjectVersion test = clientService.createObject(xAuthentication, MFDataType.Uninitialized,
-                new PropertyValue[] {testJiraClass, soTaiKhoan}, file);
+                new PropertyValue[] {testJiraClass, soTaiKhoan}, file, 107);
 
-
+        assertThat(test).isNotNull();
     }
 
     @Test
     public void testGetObject() {
-        List<Vault> authJson = clientService.authentication("thang.hoang", "VNDs$1234");
+        List<Vault> authJson = clientService.authentication("thang.hoang", "VNDs$1234", true, "IPA");
         String xAuthentication = authJson.get(0).getAuthentication();
         ObjectVersion test = clientService.getObject(xAuthentication, MFDataType.Uninitialized, 869613);
         assertThat(test).isNotNull();
