@@ -26,6 +26,7 @@ public class MfilesClientService {
     private CloseableHttpClient httpClient;
     private final JsonParser parser;
     private final Gson gson;
+    private String jiraUserAuthentication;
 
     public MfilesClientService() {
         httpClient = HttpClientBuilder.create().build();
@@ -36,6 +37,11 @@ public class MfilesClientService {
     public MfilesClientService(String serverURI) {
         this();
         this.mFilesServerRESTURI = serverURI;
+        this.jiraUserAuthentication = getJiraUserAuthentication();
+    }
+
+    public String getJiraUserAuthentication() {
+        return authentication("jirauser", "vnds1234", false, null).get(0).getAuthentication();
     }
 
     public List<Vault> authentication(String username, String password, boolean windowsUser, String domain) {
@@ -117,6 +123,20 @@ public class MfilesClientService {
         return gson.fromJson(execute, new TypeToken<List<ClassGroup>>(){}.getType());
     }
 
+    public List<ValueListItem> getValueListItemByPropertyDefID(int propertyDefID, String filter) {
+        HttpGet request = new HttpGet(mFilesServerRESTURI +
+                String.format("valuelistsbypropdefid/%d/items.aspx?limit=100&filter=%s&extensions=mfwa&q=0&p=1&s=0&contentType=application%2Fjson%3B+charset%3Dutf-8", propertyDefID, filter));
+        request.setHeader("Accept", "application/json");
+        request.setHeader("X-Authentication", jiraUserAuthentication);
+        final String execute = execute(request);
+
+        return gson.fromJson(execute, new TypeToken<List<ValueListItem>>(){}.getType());
+    }
+
+    public List<ValueListItem> getValueListItemByPropertyDefID(int propertyDefID) {
+        return getValueListItemByPropertyDefID(propertyDefID, "");
+    }
+
     public List<PropertyDef> getPropertyDefs(String xAuthentication) {
         HttpGet request = new HttpGet(mFilesServerRESTURI + "structure/properties");
         request.setHeader("Accept", "application/json");
@@ -161,7 +181,9 @@ public class MfilesClientService {
         PropertyValue testJiraClass = PropertyValue.create(100, MFDataType.Lookup, null, Integer.valueOf(selectedClassAndWorkFlow[0]));
 
 //        PropertyValue soTaiKhoan = PropertyValue.create(1205, MFDataType.Lookup, customerNo, 32901);
-        PropertyValue soTaiKhoan = PropertyValue.create(1205, MFDataType.Lookup, customerNo, 32901);
+        List<ValueListItem> customerNoList = getValueListItemByPropertyDefID(1205, customerNo);
+        int customerID = customerNoList.get(0).getID();
+        PropertyValue soTaiKhoan = PropertyValue.create(1205, MFDataType.Lookup, customerNo, customerID);
         PropertyValue noiLuuTru = PropertyValue.create(1256, MFDataType.MultiSelectLookup, "Hội Sở", 1);
 
         ObjectVersion objectVersion = this.createObject(xAuthentication, MFDataType.Uninitialized,
