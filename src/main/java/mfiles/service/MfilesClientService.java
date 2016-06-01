@@ -140,6 +140,15 @@ public class MfilesClientService {
         return uploadInfo;
     }
 
+    public List<Workflow> getStructureWorkflows() {
+        HttpGet request = new HttpGet(mFilesServerRESTURI + "/structure/workflows");
+        request.setHeader("Accept", "application/json");
+        request.setHeader("X-Authentication", getJiraUserAuthentication());
+        final String execute = execute(request);
+
+        return gson.fromJson(execute, new TypeToken<List<Workflow>>(){}.getType());
+    }
+
     public List<ClassGroup> getClassGroups(String xAuthentication) {
         HttpGet request = new HttpGet(mFilesServerRESTURI + "objects/0/classes.aspx?byGroup=true");
         request.setHeader("Accept", "application/json");
@@ -147,6 +156,10 @@ public class MfilesClientService {
         final String execute = execute(request);
 
         return gson.fromJson(execute, new TypeToken<List<ClassGroup>>(){}.getType());
+    }
+
+    public List<ClassGroup> getClassGroups() {
+        return getClassGroups(getJiraUserAuthentication());
     }
 
     public List<ValueListItem> getValueListItemByPropertyDefID(int propertyDefID, String filter) {
@@ -221,7 +234,7 @@ public class MfilesClientService {
         List<ValueListItem> customerNoList = getValueListItemByPropertyDefID(1256);
         for (ValueListItem item : customerNoList) {
             if (item.getID() == Integer.valueOf(noiLuuHoSoGoc)) {
-                return PropertyValue.create(1256, MFDataType.Lookup, item.getName(), item.getID());
+                return PropertyValue.create(1256, MFDataType.MultiSelectLookup, item.getName(), item.getID());
             }
         }
 
@@ -236,4 +249,6 @@ public class MfilesClientService {
         int customerID = customerNoList.get(0).getID();
         return PropertyValue.create(1205, MFDataType.Lookup, customerNo, customerID);
     }
+
+
 }

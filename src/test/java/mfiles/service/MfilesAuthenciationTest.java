@@ -82,4 +82,11 @@ public class MfilesAuthenciationTest {
 
         assertThat(test).isNotNull();
     }
+
+    @Test
+    public void testWorkflow() {
+        String auth = clientService.getJiraUserAuthentication();
+        final List<Workflow> workflows = clientService.getStructureWorkflows();
+        assertThat(workflows).isNotEmpty();
+    }
 }
