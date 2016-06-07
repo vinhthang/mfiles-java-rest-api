@@ -13,7 +13,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(JUnit4.class)
-public class MfilesAuthenciationTest {
+public class MfilesClientServiceTest {
     MfilesClientService clientService = new MfilesClientService("http://10.26.0.46/REST/");
     @Test
     public void testAuth() {
@@ -53,7 +53,7 @@ public class MfilesAuthenciationTest {
         List<Vault> authJson = clientService.authentication("jirauser", "vnds1234", false, null);
         String xAuthentication = authJson.get(0).getAuthentication();
 
-        List<PropertyDef> propertyDefList = clientService.getPropertyDefs(xAuthentication);
+        List<PropertyDef> propertyDefList = clientService.getPropertyDefs();
 
         Path file = Paths.get("/Users/thang/Documents", "thang.hoang");
         Path file2 = Paths.get("/Users/thang/Documents", "thang.hoang.pub");
@@ -74,7 +74,7 @@ public class MfilesAuthenciationTest {
         List<Vault> authJson = clientService.authentication("thang.hoang", "VNDs$1234", true, "IPA");
         String xAuthentication = authJson.get(0).getAuthentication();
 
-        List<PropertyDef> propertyDefList = clientService.getPropertyDefs(xAuthentication);
+        List<PropertyDef> propertyDefList = clientService.getPropertyDefs();
 
         Path file = Paths.get("/Users/thang/Documents", "thang.hoang");
         ObjectVersion test = clientService.createObject(xAuthentication, MFDataType.Uninitialized,
@@ -88,5 +88,17 @@ public class MfilesAuthenciationTest {
         String auth = clientService.getJiraUserAuthentication();
         final List<Workflow> workflows = clientService.getStructureWorkflows();
         assertThat(workflows).isNotEmpty();
+    }
+
+    @Test
+    public void getStructureClasses() {
+        final ExtendedObjectClass extendedObjectClassList = clientService.getExtendedObjectClass(248);
+        assertThat(extendedObjectClassList).isNotNull();
+    }
+
+    @Test
+    public void getPropertyDef() {
+        final List<PropertyDef> propertyDefs = clientService.getPropertyDefs();
+        assertThat(propertyDefs).isNotEmpty();
     }
 }

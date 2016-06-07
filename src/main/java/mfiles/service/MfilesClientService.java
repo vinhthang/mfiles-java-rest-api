@@ -140,6 +140,15 @@ public class MfilesClientService {
         return uploadInfo;
     }
 
+    public ExtendedObjectClass getExtendedObjectClass(Integer objectClassId) {
+        HttpGet request = new HttpGet(mFilesServerRESTURI + String.format("/structure/classes/%d/full.aspx", objectClassId));
+        request.setHeader("Accept", "application/json");
+        request.setHeader("X-Authentication", getJiraUserAuthentication());
+        final String execute = execute(request);
+
+        return gson.fromJson(execute, ExtendedObjectClass.class);
+    }
+
     public List<Workflow> getStructureWorkflows() {
         HttpGet request = new HttpGet(mFilesServerRESTURI + "/structure/workflows");
         request.setHeader("Accept", "application/json");
@@ -177,10 +186,10 @@ public class MfilesClientService {
         return getValueListItemByPropertyDefID(propertyDefID, "");
     }
 
-    public List<PropertyDef> getPropertyDefs(String xAuthentication) {
+    public List<PropertyDef> getPropertyDefs() {
         HttpGet request = new HttpGet(mFilesServerRESTURI + "structure/properties");
         request.setHeader("Accept", "application/json");
-        request.setHeader("X-Authentication", xAuthentication);
+        request.setHeader("X-Authentication", getJiraUserAuthentication());
         final String execute = execute(request);
 
         return gson.fromJson(execute, new TypeToken<List<PropertyDef>>(){}.getType());
