@@ -16,7 +16,7 @@ import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -80,20 +80,7 @@ public class MfilesClientService {
     }
 
     public ObjectVersion createObject(String xAuthentication, int type, PropertyValue[] propertyValues, Path file, int workflow) {
-        UploadInfo uploadInfo = uploadFile(xAuthentication, file);
-        HttpPost request = new HttpPost(mFilesServerRESTURI + "objects/" + type + ".aspx?checkIn=false&_method=POST");
-        request.setHeader("X-Authentication", xAuthentication);
-
-        ObjectCreationInfo objectCreationInfo = new ObjectCreationInfo();
-        objectCreationInfo.setPropertyValues(propertyValues);
-        objectCreationInfo.setFiles(new UploadInfo[] {uploadInfo});
-//        objectCreationInfo.setWorkflow(107);
-        objectCreationInfo.setWorkflow(workflow);
-        objectCreationInfo.setNamedACL(-1);
-        request.setEntity(new StringEntity(gson.toJson(objectCreationInfo), "UTF-8"));
-
-        String result = execute(request);
-        return gson.fromJson(result, ObjectVersion.class);
+        return createObject(xAuthentication, type, propertyValues, Arrays.asList(file), workflow);
     }
 
     public ObjectVersion createObject(String xAuthentication, int type, PropertyValue[] propertyValues, List<Path> files, int workflow) {
@@ -222,19 +209,19 @@ public class MfilesClientService {
     }
 
     public ExportResult export(List<Path> fileList, String customerNo, String objectClass, String workFlow, String noiLuuHoSoGoc) {
-        final ExportResult exportResult = new ExportResult();
         List<Vault> authJson = this.authentication("jirauser", "vnds1234", false, null);
         String xAuthentication = authJson.get(0).getAuthentication();
         //Class value
 //        PropertyValue testJiraClass = PropertyValue.create(100, MFDataType.Lookup, null, 451);
         PropertyValue loaiTaiLieu = PropertyValue.create(100, MFDataType.Lookup, null, Integer.valueOf(objectClass));
+        PropertyValue checkIn = PropertyValue.create(22, MFDataType.Boolean, "Đóng", Boolean.TRUE);
         PropertyValue soTaiKhoan = createCustomerNoPropertyValue(customerNo);
 //        PropertyValue noiLuuTru = PropertyValue.create(1256, MFDataType.MultiSelectLookup, "Hội Sở", Integer.valueOf(noiLuuHoSoGoc));
         PropertyValue noiLuuTru = createNoiLuuHoSoGocPropertyValue(noiLuuHoSoGoc);
 
         ObjectVersion objectVersion = this.createObject(xAuthentication, MFDataType.Uninitialized,
-                new PropertyValue[]{loaiTaiLieu, soTaiKhoan, noiLuuTru}, fileList, Integer.valueOf(workFlow));
-        exportResult.setMessage(gson.toJson(objectVersion));
+                new PropertyValue[]{loaiTaiLieu, soTaiKhoan, noiLuuTru, checkIn}, fileList, Integer.valueOf(workFlow));
+        final ExportResult exportResult = new ExportResult(gson.toJson(objectVersion), objectVersion);
 
         return exportResult;
     }
@@ -252,12 +239,27 @@ public class MfilesClientService {
 
     public PropertyValue createCustomerNoPropertyValue(String customerNo) {
         List<ValueListItem> customerNoList = getValueListItemByPropertyDefID(1205, customerNo);
-        if (customerNoList == null || customerNoList.size() == 0) {
+        if (customerNoList == null || customerNoList.size() == 0 || !customerNo.equals(customerNoList.get(0).getName())) {
             throw new MFilesException(404, "Customer No not found, " + customerNo);
         }
+
         int customerID = customerNoList.get(0).getID();
         return PropertyValue.create(1205, MFDataType.Lookup, customerNo, customerID);
     }
 
+    public List<PropertyValue> displayProperties(int objectId) {
+        HttpGet request = new HttpGet(mFilesServerRESTURI + String.format("objects/0/%d/1/displayproperties.aspx", objectId));
+        request.setHeader("Accept", "application/json");
+        request.setHeader("X-Authentication", getJiraUserAuthentication());
+        final String execute = execute(request);
+        return gson.fromJson(execute, new TypeToken<List<PropertyValue>>(){}.getType());
+    }
 
+    public void checkout(int objectId) {
+        HttpPost request = new HttpPost(mFilesServerRESTURI + String.format("objects/0/%d/checkedout.aspx?_method=PUT", objectId));
+        request.setHeader("Accept", "application/json");
+        request.setHeader("X-Authentication", getJiraUserAuthentication());
+        request.setEntity(new StringEntity("{\"Value\": 0 }", "utf-8"));
+        final String execute = execute(request);
+    }
 }

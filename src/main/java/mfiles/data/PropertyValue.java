@@ -2,6 +2,7 @@ package mfiles.data;
 
 public class PropertyValue {
     private int propertyDef;
+    private int contentType;
     private TypedValue typedValue;
 
     public PropertyValue() {
@@ -27,6 +28,14 @@ public class PropertyValue {
 
     public void setTypedValue(TypedValue typedValue) {
         this.typedValue = typedValue;
+    }
+
+    public int getContentType() {
+        return contentType;
+    }
+
+    public void setContentType(int contentType) {
+        this.contentType = contentType;
     }
 
     public static PropertyValue create(int propertyDef, int typeDef, String displayValue, Object... value) {

@@ -65,6 +65,52 @@ public class MfilesClientServiceTest {
     }
 
     @Test
+    public void testCreateSingleFile() {
+        //Class value
+        PropertyValue testJiraClass = PropertyValue.create(100, MFDataType.Lookup, null, 451);
+
+        PropertyValue soTaiKhoan = PropertyValue.create(1205, MFDataType.Lookup, "0001000001", 32901);
+
+        List<Vault> authJson = clientService.authentication("jirauser", "vnds1234", false, null);
+        String xAuthentication = authJson.get(0).getAuthentication();
+        PropertyValue checkIn = PropertyValue.create(22, MFDataType.Boolean, "Đóng", Boolean.TRUE);
+
+        List<PropertyDef> propertyDefList = clientService.getPropertyDefs();
+
+        Path file = Paths.get("/Users/thang/Documents", "Test Word.doc");
+
+        ObjectVersion test = clientService.createObject(xAuthentication, MFDataType.Uninitialized,
+                new PropertyValue[]{testJiraClass, soTaiKhoan, checkIn},file, 107);
+
+        assertThat(test).isNotNull();
+    }
+
+    @Test
+    public void testCreateSingleFileAndCheckOut() {
+        //Class value
+        PropertyValue testJiraClass = PropertyValue.create(100, MFDataType.Lookup, null, 451);
+
+        PropertyValue soTaiKhoan = PropertyValue.create(1205, MFDataType.Lookup, "ISSUES LOG", 32901);
+
+        List<Vault> authJson = clientService.authentication("jirauser", "vnds1234", false, null);
+        String xAuthentication = authJson.get(0).getAuthentication();
+        PropertyValue checkIn = PropertyValue.create(22, MFDataType.Boolean, "Đóng", Boolean.TRUE);
+
+        List<PropertyDef> propertyDefList = clientService.getPropertyDefs();
+
+        Path file = Paths.get("/Users/thang/Documents", "ISSUES LOG.docx");
+
+        ObjectVersion test = clientService.createObject(xAuthentication, MFDataType.Uninitialized,
+                new PropertyValue[]{testJiraClass, soTaiKhoan, checkIn},file, 107);
+
+        int id = test.getObjVer().getID();
+
+        //clientService.checkout(id);
+
+        assertThat(test).isNotNull();
+    }
+
+        @Test
     public void testCreateFile() {
         //Class value
         PropertyValue testJiraClass = PropertyValue.create(100, MFDataType.Lookup, null, 451);

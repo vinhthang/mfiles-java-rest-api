@@ -1,13 +1,21 @@
 package mfiles.service;
 
+import mfiles.data.ObjectVersion;
+
 public class ExportResult {
-    private String message;
+    private final String message;
+    private final ObjectVersion result;
+
+    public ExportResult(String message, ObjectVersion result) {
+        this.message = message;
+        this.result = result;
+    }
 
     public String getMessage() {
         return message;
     }
 
-    public void setMessage(String message) {
-        this.message = message;
+    public ObjectVersion getResult() {
+        return result;
     }
 }
