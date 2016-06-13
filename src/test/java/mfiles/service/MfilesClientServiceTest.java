@@ -39,7 +39,7 @@ public class MfilesClientServiceTest {
         Path file = Paths.get("/Users/thang/Documents", "thang.hoang");
         Path file2 = Paths.get("/Users/thang/Documents", "thang.hoang.pub");
 
-        final ExportResult exportResult = clientService.export(Arrays.asList(file, file2), "0001000001", "451", "107", "1");
+        final ExportResult exportResult = clientService.export(Arrays.asList(file, file2), "0001000001", "451", 107, "1");
         assertThat(exportResult).isNotNull();
     }
 
@@ -53,13 +53,14 @@ public class MfilesClientServiceTest {
         List<Vault> authJson = clientService.authentication("jirauser", "vnds1234", false, null);
         String xAuthentication = authJson.get(0).getAuthentication();
 
-        List<PropertyDef> propertyDefList = clientService.getPropertyDefs();
+//        List<PropertyDef> propertyDefList = clientService.getPropertyDefs();
 
         Path file = Paths.get("/Users/thang/Documents", "thang.hoang");
         Path file2 = Paths.get("/Users/thang/Documents", "thang.hoang.pub");
+        Path file3 = Paths.get("/Users/thang/Documents", "test.doc");
 
         ObjectVersion test = clientService.createObject(xAuthentication, MFDataType.Uninitialized,
-                new PropertyValue[] {testJiraClass, soTaiKhoan}, Arrays.asList(file, file2), 107);
+                new PropertyValue[] {testJiraClass, soTaiKhoan}, Arrays.asList(file, file2, file3), 107);
 
         assertThat(test).isNotNull();
     }
@@ -88,24 +89,23 @@ public class MfilesClientServiceTest {
     @Test
     public void testCreateSingleFileAndCheckOut() {
         //Class value
-        PropertyValue testJiraClass = PropertyValue.create(100, MFDataType.Lookup, null, 451);
+//        PropertyValue testJiraClass = PropertyValue.create(100, MFDataType.Lookup, null, 451);
+        PropertyValue testJiraClass = PropertyValue.create(100, MFDataType.Lookup, null, 460);
 
         PropertyValue soTaiKhoan = PropertyValue.create(1205, MFDataType.Lookup, "ISSUES LOG", 32901);
 
         List<Vault> authJson = clientService.authentication("jirauser", "vnds1234", false, null);
         String xAuthentication = authJson.get(0).getAuthentication();
         PropertyValue checkIn = PropertyValue.create(22, MFDataType.Boolean, "Đóng", Boolean.TRUE);
-
-        List<PropertyDef> propertyDefList = clientService.getPropertyDefs();
-
-        Path file = Paths.get("/Users/thang/Documents", "ISSUES LOG.docx");
+//        Path file = Paths.get("/Users/thang/Documents", "ISSUES LOG.docx");
+        Path file = Paths.get("/Users/thang/Documents", "thang.hoang");
+        Path file2 = Paths.get("/Users/thang/Documents", "thang.hoang.pub");
+        Path file3 = Paths.get("/Users/thang/Documents", "test.doc");
 
         ObjectVersion test = clientService.createObject(xAuthentication, MFDataType.Uninitialized,
-                new PropertyValue[]{testJiraClass, soTaiKhoan, checkIn},file, 107);
+                new PropertyValue[]{testJiraClass, soTaiKhoan}, Arrays.asList(file, file2, file3), 164);
 
-        int id = test.getObjVer().getID();
-
-        //clientService.checkout(id);
+        clientService.checkout(test.getObjVer().getID());
 
         assertThat(test).isNotNull();
     }

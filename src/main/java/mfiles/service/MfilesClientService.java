@@ -208,19 +208,23 @@ public class MfilesClientService {
         return parser.parse(result).getAsJsonArray();
     }
 
-    public ExportResult export(List<Path> fileList, String customerNo, String objectClass, String workFlow, String noiLuuHoSoGoc) {
+    public ExportResult export(List<Path> fileList, String customerNo, String objectClass, Integer workFlow, String noiLuuHoSoGoc) {
         List<Vault> authJson = this.authentication("jirauser", "vnds1234", false, null);
         String xAuthentication = authJson.get(0).getAuthentication();
+        if (workFlow == null) {
+            final ExtendedObjectClass extendedObjectClass = getExtendedObjectClass(Integer.valueOf(objectClass));
+            workFlow = extendedObjectClass.getWorkflow();
+        }
         //Class value
 //        PropertyValue testJiraClass = PropertyValue.create(100, MFDataType.Lookup, null, 451);
         PropertyValue loaiTaiLieu = PropertyValue.create(100, MFDataType.Lookup, null, Integer.valueOf(objectClass));
-        PropertyValue checkIn = PropertyValue.create(22, MFDataType.Boolean, "Đóng", Boolean.TRUE);
+//        PropertyValue checkIn = PropertyValue.create(22, MFDataType.Boolean, "Đóng", Boolean.TRUE);
         PropertyValue soTaiKhoan = createCustomerNoPropertyValue(customerNo);
 //        PropertyValue noiLuuTru = PropertyValue.create(1256, MFDataType.MultiSelectLookup, "Hội Sở", Integer.valueOf(noiLuuHoSoGoc));
         PropertyValue noiLuuTru = createNoiLuuHoSoGocPropertyValue(noiLuuHoSoGoc);
 
         ObjectVersion objectVersion = this.createObject(xAuthentication, MFDataType.Uninitialized,
-                new PropertyValue[]{loaiTaiLieu, soTaiKhoan, noiLuuTru, checkIn}, fileList, Integer.valueOf(workFlow));
+                new PropertyValue[]{loaiTaiLieu, soTaiKhoan, noiLuuTru}, fileList, workFlow);
         final ExportResult exportResult = new ExportResult(gson.toJson(objectVersion), objectVersion);
 
         return exportResult;
