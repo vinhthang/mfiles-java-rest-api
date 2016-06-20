@@ -22,17 +22,6 @@ public class MfilesClientServiceTest {
         assertThat(test).isNotNull();
         assertThat(test.get(0).getAuthentication()).isNotNull();
     }
-    @Test
-    public void testGetClasses() {
-        List<Vault> test = clientService.authentication("thang.hoang", "VNDs$1234", true, "IPA");
-//        List<Vault> test = authentication.authentication("AlexK", "alexk", "﻿D673ADED-6180-494D-BE9D-FC190A4AA1D8");
-        assertThat(test).isNotNull();
-        assertThat(test.get(0).getAuthentication()).isNotNull();
-
-        final List<ClassGroup> classGroups = clientService.getClassGroups(test.get(0).getAuthentication());
-
-        assertThat(classGroups).isNotNull();
-    }
 
     @Test
     public void testExport() {
